@@ -394,16 +394,22 @@ void get_free_space_coordinates(int x, int y, int *coordinates){
 void save_last_generation(){
     int rows = ecosystemGlobalConfig->rows;
     int cols = ecosystemGlobalConfig->cols;
+    int x,y, tid;
 
-    for (size_t x = 0; x < rows; x++){
-        for (size_t y = 0; y < cols; y++){
-            
-            if(globalBoard[x][y].occupied!=ROCK){
-                globalBoard[x][y].occupied = auxBoard[x][y].occupied;
-                globalBoard[x][y].rabbit_proc = auxBoard[x][y].rabbit_proc;
-                globalBoard[x][y].fox_proc = auxBoard[x][y].fox_proc;
-                globalBoard[x][y].fox_food = auxBoard[x][y].fox_food;
+    #pragma omp parallel if(NTHREADS > 1) num_threads(NTHREADS) private(x,y,tid)
+    {   
+        tid = omp_get_thread_num();
+        
+        #pragma omp for
+        for (x = 0; x < rows; x++){
+            for (y = 0; y < cols; y++){
+                if(globalBoard[x][y].occupied!=ROCK){
+                    globalBoard[x][y].occupied = auxBoard[x][y].occupied;
+                    globalBoard[x][y].rabbit_proc = auxBoard[x][y].rabbit_proc;
+                    globalBoard[x][y].fox_proc = auxBoard[x][y].fox_proc;
+                    globalBoard[x][y].fox_food = auxBoard[x][y].fox_food;
 
+                }
             }
         }
     }
@@ -560,12 +566,17 @@ void place_rabbit(int x, int y){
 void init_rabbit_turn(){
     int rows = ecosystemGlobalConfig->rows;
     int cols = ecosystemGlobalConfig->cols;
-    int x,y;
+    int x,y,tid;
 
-    for (x = 0; x < rows; x++){
-        for (y = 0; y < cols; y++){
-            if(globalBoard[x][y].occupied==RABBIT){
-                place_rabbit(x,y);
+    #pragma omp parallel if(NTHREADS > 1) num_threads(NTHREADS) private(x,y,tid)
+    {  
+        tid = omp_get_thread_num();
+        #pragma omp for
+        for (x = 0; x < rows; x++){
+            for (y = 0; y < cols; y++){
+                if(globalBoard[x][y].occupied==RABBIT){
+                    place_rabbit(x,y);
+                }
             }
         }
     }
@@ -946,13 +957,18 @@ void place_fox(int x, int y){
 void init_fox_turn(){
     int rows = ecosystemGlobalConfig->rows;
     int cols = ecosystemGlobalConfig->cols;
-    int x,y;
+    int x,y,tid;
 
-    for (x = 0; x < rows; x++){
-        for (y = 0; y < cols; y++){
-            
-            if(globalBoard[x][y].occupied==FOX){
-                place_fox(x,y);
+    #pragma omp parallel if(NTHREADS > 1) num_threads(NTHREADS) private(x,y,tid)
+    {  
+        tid = omp_get_thread_num();
+        #pragma omp for
+        for (x = 0; x < rows; x++){
+            for (y = 0; y < cols; y++){
+                
+                if(globalBoard[x][y].occupied==FOX){
+                    place_fox(x,y);
+                }
             }
         }
     }
